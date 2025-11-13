@@ -39,9 +39,6 @@ This guide provides step-by-step instructions for testing the MongoDB database c
 1. Install MongoDB Compass (if not already installed)
 2. Open MongoDB Compass
 3. Use the connection string from your .env file:
-   ```
-   mongodb+srv://cassandracook:04wmR9ILzaB6Mjbf@cluster0.xm7dh5w.mongodb.net/?appName=Cluster0
-   ```
 4. Click "Connect"
 5. If successful, you'll see your database clusters and collections
 
