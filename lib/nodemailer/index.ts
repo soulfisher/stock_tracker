@@ -7,11 +7,15 @@ interface NewsSummaryEmailData {
   newsContent: string;
 }
 
+if (!process.env.NODEMAILER_EMAIL || !process.env.NODEMAILER_PASSWORD) {
+  throw new Error("NODEMAILER_EMAIL and NODEMAILER_PASSWORD must be set");
+}
+
 export const transport = nodemailer.createTransport({
   service: "Gmail",
   auth: {
     user: process.env.NODEMAILER_EMAIL!,
-    pass: process.env.NODEMAIL_PASSWORD!,
+    pass: process.env.NODEMAILER_PASSWORD!,
   },
 });
 
