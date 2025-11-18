@@ -60,7 +60,7 @@ export function SearchCommand({
   const debouncedSearch = useDebounce(handleSearch, 300);
 
   useEffect(() => {
-    debouncedSearch;
+    debouncedSearch();
   }, [searchTerm]);
 
   const handleSelectStock = (stock: string) => {

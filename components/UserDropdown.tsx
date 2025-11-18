@@ -73,7 +73,7 @@ const UserDropdown = ({
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-gray-600" />
         <nav className="sm:hidden">
-          <NavItems />
+          <NavItems initialStocks={initialStocks} />
         </nav>
       </DropdownMenuContent>
     </DropdownMenu>
