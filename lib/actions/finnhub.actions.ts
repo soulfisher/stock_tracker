@@ -1,6 +1,8 @@
 "use server";
 
 import { validateArticle, formatArticle, getDateRange } from "@/lib/utils";
+import { cache } from "react";
+import { POPULAR_STOCK_SYMBOLS } from "@/lib/constants";
 
 // Constants
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
@@ -184,3 +186,64 @@ interface FormattedNewsArticle {
   category: string;
   related: string;
 }
+
+/**
+ * Search for stocks by query or return popular stocks if no query is provided
+ * @param query Optional search query
+ * @returns Array of stocks with watchlist status
+ */
+export const searchStocks = cache(async (query?: string) => {
+  try {
+    let results: FinnhubSearchResult[] = [];
+
+    // If no query is provided, fetch top 10 popular stocks
+    if (!query) {
+      // Take first 10 popular symbols
+      const popularSymbols = POPULAR_STOCK_SYMBOLS.slice(0, 10);
+
+      // Fetch profile data for each popular symbol
+      const profilePromises = popularSymbols.map(async (symbol) => {
+        try {
+          const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+          const profile = await fetchJSON(url, 3600); // Cache for 1 hour
+
+          // Convert profile to FinnhubSearchResult format
+          return {
+            symbol: symbol,
+            description: profile.name || symbol,
+            displaySymbol: symbol,
+            type: "Common Stock"
+          } as FinnhubSearchResult;
+        } catch (error) {
+          console.error(`Error fetching profile for ${symbol}:`, error);
+          return null;
+        }
+      });
+
+      // Wait for all profile requests to complete and filter out any nulls
+      const profiles = (await Promise.all(profilePromises)).filter(Boolean) as FinnhubSearchResult[];
+      results = profiles;
+    } 
+    // If query is provided, search for stocks
+    else {
+      const trimmedQuery = query.trim();
+      const url = `${FINNHUB_BASE_URL}/search?q=${encodeURIComponent(trimmedQuery)}&token=${FINNHUB_API_KEY}`;
+      const response = await fetchJSON(url, 1800) as FinnhubSearchResponse; // Cache for 30 minutes
+      results = response.result || [];
+    }
+
+    // Map results to StockWithWatchlistStatus format
+    const stocks = results.map(result => ({
+      symbol: result.symbol.toUpperCase(),
+      name: result.description,
+      exchange: result.displaySymbol || "US",
+      type: result.type,
+      isInWatchlist: false // Default to false as per requirements
+    })).slice(0, 15); // Limit to 15 results
+
+    return stocks;
+  } catch (error) {
+    console.error("Error in stock search:", error);
+    return []; // Return empty array on error
+  }
+});
